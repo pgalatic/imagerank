@@ -7,12 +7,12 @@ from PIL import Image
 NUM_FILES = 30
 NUM_PARTITIONS = 5
 DIRNAME = 'ranked/'
-COMPARE_FACTOR = 0.15
+COMPARE_FACTOR = 0.08
 
 class Ranker():
     def __init__(self, folder):
-        self._folder = folder + '/'
-        filenames = [f for f in os.listdir(folder + '/.') if f.endswith('.png') or f.endswith('.jpg')]
+        self._folder = folder
+        filenames = [f for f in os.listdir(folder) if f.endswith('.png') or f.endswith('.jpg')]
         
         self._chosenfiles = set(random.choices(filenames, k=NUM_FILES))
         self._combinations = list(itertools.combinations(self._chosenfiles, 2))
@@ -27,7 +27,7 @@ class Ranker():
         valid = False
         
         while not valid:
-            if self._counter >= len(self._combinations):
+            if self.progress() >= 1:
                 return None, None
         
             nameA = self._combinations[self._counter][0]
@@ -37,7 +37,7 @@ class Ranker():
             scoreB = self._scoredict[nameB]
             # skip comparisons that are of no contest
             if abs(elo.expected(scoreA, scoreB) - 0.5) < COMPARE_FACTOR:
-                print(abs(elo.expected(scoreA, scoreB)))
+                # print(abs(elo.expected(scoreA, scoreB)))
                 valid = True
             else:
                 print('SKIP: %s vs %s' % (nameA, nameB))
@@ -45,6 +45,9 @@ class Ranker():
             self._counter += 1
             
         return nameA, nameB
+    
+    def progress(self):
+        return self._counter / len(self._combinations)
     
     def process(self, winner, loser):        
         scoreA = self._scoredict[winner]
